@@ -69,6 +69,8 @@ def check_date_str_right(date_str):
 
     return True
 
+
+
 class DtypeConvert(object):
     def __init__(self):
         pass
@@ -163,6 +165,22 @@ class DataDetect(object):
         plt.title('Histogram of %s' %col)
         print detect_data.describe()
 
+    def draw_bubble(self,data,x_col,y_col,z_col,size=1):  # 气泡图
+        sns.set(style="whitegrid")  # 设置样式
+        x = data[x_col]
+        y = data[y_col]  # Y轴数据
+        z = data[z_col]  # 用来调整各个点的大小s
+        cm = plt.cm.get_cmap('RdYlBu')
+        fig, ax = plt.subplots(figsize=(12, 10))
+        bubble = ax.scatter(x, y, s=(z - np.min(z) + 0.1) * size, c=z, cmap=cm, linewidth=0.5, alpha=0.5)
+        ax.grid()
+        fig.colorbar(bubble)
+        ax.set_xlabel(x_col, fontsize=15)  # X轴标签
+        ax.set_ylabel(y_col, fontsize=15)  # Y轴标签
+        plt.show()
+
 
 if __name__=='__main__':
     pass
+
+
