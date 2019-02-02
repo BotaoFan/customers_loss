@@ -30,7 +30,6 @@ def xgboost_paras_select(train_x,train_y,cv_params,other_params):
 
 
 
-
 if __name__=='__main__':
     #=====Load raw data=====
     #Load cust_info
@@ -90,7 +89,7 @@ if __name__=='__main__':
     del cust_trade_1
     cust_trade.reset_index(drop=True,inplace=True)
 
-    #=====Data Clear=====
+    #=====Data Clean=====
     #cust_info Data Clean
     cust_info.loc[cust_info['khrq'].astype(np.int32).astype(str).apply(lambda x: len(x) < 8), 'khrq']='18000101'
     cust_info['khrq_date']=pd.to_datetime(cust_info['khrq'].astype(np.int32).astype(str),format='%Y%m%d')
