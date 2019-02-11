@@ -27,7 +27,7 @@ warnings.filterwarnings('ignore')
 
 if __name__=='__main__':
     #Set data dir path
-    data_dir_name='raw_data_customers_loss'
+    data_dir_name='raw_data_customers_loss_18-1_18-4'
     data_dir_path=os.getcwd()+'/../'+data_dir_name+'/'
     #=====Load Raw Data=====
     (cust_info,cust_trade)=dp.load_data(data_dir_path)
@@ -37,8 +37,8 @@ if __name__=='__main__':
     all_features=dp.generate_features(cust_info,cust_trade)
     #=====Prepare for model======
     #Convert y to binary variables
-    all_features['y']=0
-    all_features.loc[all_features['chg_rate']<=-0.5,'y']=1
+    #all_features['y']=0
+    #all_features.loc[all_features['chg_rate']<=-0.5,'y']=1
     y_df=pd.DataFrame(all_features['y'])
     #Drop columns which is not features
     all_features.drop(columns=['khh', 'chg_rate', 'start_jyzc','sec','area'],inplace=True)
@@ -64,9 +64,6 @@ if __name__=='__main__':
 
     import numpy as np
     from sklearn.metrics import roc_auc_score
-    y_true = np.array([0, 0, 1, 1])
-    y_scores = np.array([0.1, 0.4, 0.35, 0.8])
-    roc_auc_score(true_y, pred_y)
 
 
     params = {'learning_rate': 0.1, 'n_estimators': 600, 'max_depth': 5, 'min_child_weight': 1,
@@ -75,8 +72,46 @@ if __name__=='__main__':
     t_start=datetime.now()
     model_500.fit(train_x,train_y)
     t_end=datetime.now()
-    #test score
 
+
+    #======Tune parameters======
+    #Tune n_estimators
+    other_paras = {'learning_rate': 0.1, 'max_depth': 5, 'min_child_weight': 1,
+              'seed': 0,'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0}
+    cv_paras={'n_estimators':[50,100,200,300,400]}
+    model_train.xgboost_paras_select(train_x, train_y, cv_paras, other_paras, cv=5, verbose=3)
+
+    #Tune min_child_weight and max_depth
+    other_paras = {'learning_rate': 0.1, 'n_estimators':100,
+              'seed': 0,'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0}
+    cv_paras={'max_depth':[3,4,5,6,7],'min_child_weight':[0.5,1,2,3]}
+    model_train.xgboost_paras_select(train_x, train_y, cv_paras, other_paras, cv=4, verbose=3)
+
+    #Tune gamma
+    other_paras = {'learning_rate': 0.1, 'n_estimators':100,'min_child_weight':1,'max_depth':4,
+              'seed': 0,'subsample': 0.8, 'colsample_bytree': 0.8}
+    cv_paras={'gamma':[0,0.2,0.4,0.6,0.8]}
+    model_train.xgboost_paras_select(train_x, train_y, cv_paras, other_paras, cv=4, verbose=3)
+
+    #Tune subsample and colsample_bytree
+    other_paras = {'learning_rate': 0.1, 'n_estimators':100,'min_child_weight':1,'max_depth':4,
+              'seed': 0,'gamma':4}
+    cv_paras={'subsample':[0.2,0.4,0.6,0.8,1],'colsample_bytree':[0.2,0.4,0.6,0.8,1]}
+    model_train.xgboost_paras_select(train_x, train_y, cv_paras, other_paras, cv=4, verbose=3)
+
+    #Tune learning rate
+    other_paras = {'n_estimators':100,'min_child_weight':1,'max_depth':4,
+              'seed': 0,'gamma':4,'subsample':0.8,'colsample_bytree':0.8}
+    cv_paras={'learning_rate':[0.1,0.3,0.5,0.7,0.9]}
+    model_train.xgboost_paras_select(train_x, train_y, cv_paras, other_paras, cv=4, verbose=3)
+
+    #======Model Training======
+    paras = {'n_estimators':0.1,'n_estimators':100,'min_child_weight':1,'max_depth':4,
+              'seed': 0,'gamma':4,'subsample':0.8,'colsample_bytree':0.8}
+    model = xgb.XGBClassifier(**paras)
+    model.fit(train_x,train_y)
+
+    #======Test Score======
     test_pred_y=model.predict_proba(test_x)
     test_pred_y = test_pred_y[:, 1]
     roc_auc_score(test_y,test_pred_y)
@@ -85,17 +120,7 @@ if __name__=='__main__':
     test_result_df=pd.concat([test_pred_y_df,test_y_df],axis=1)
     test_result_df.sort_values('prob',inplace=True,ascending=False)
 
-
-    other_paras = {'learning_rate': 0.1, 'max_depth': 5, 'min_child_weight': 1,
-              'seed': 0,'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0}
-    cv_paras={'n_estimators':[50,100,200,300,400]}
-    model['n_estimators_300'],time_consume['n_estimators_300']=model_train.train_model(paras, train_x, train_y)
-    a_700,b_700,c_700=model_train.test_result(model_700,test_x,test_y,bins=20)
-
-    model_train.xgboost_paras_select(train_x,train_y,cv_paras,other_paras,cv=5,verbose=3)
-
-
-
+    a,b,c=model_train.test_result(model,test_x,test_y,bins=20)
 
 
 

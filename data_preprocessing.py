@@ -78,7 +78,7 @@ def clean_data(cust_info,cust_trade):
     #cust_info Data Clean
     #convert khrq from number to datetime
     cust_info.loc[cust_info['khrq'].astype(np.int32).astype(str).apply(lambda x: len(x) < 8), 'khrq']='18000101'
-    cust_info['khrq_date']=pd.to_datetime(cust_info['khrq'].astype(np.int32).astype(str),format='%Y%m%d')
+    cust_info['khrq_date']=pd.to_datetime(cust_info['khrq'].astype(np.int32).astype(str),format='%Y%m%d',errors='coerce')
     cust_info.loc[cust_info['khrq_date']==datetime(1800,01,01),'khrq_date']=np.nan
     cust_info.loc[cust_info['khrq']=='18000101','khrq']=np.nan
     #convert birthday from number to datetime
@@ -86,7 +86,7 @@ def clean_data(cust_info,cust_trade):
     cust_info.loc[cust_info['birthday'].astype(np.int32).astype(str).apply(lambda x: len(x) < 8),'birthday']='18000101'
     cust_info['birthday']=cust_info['birthday'].astype(np.int32).astype(str)
     cust_info.loc[~(cust_info['birthday'].apply(lambda x: tools.check_date_str_right(x))),'birthday']='18000101'
-    cust_info['birthday_datetime']=pd.to_datetime(cust_info['birthday'].astype(np.int32).astype(str),format='%Y%m%d')
+    cust_info['birthday_datetime']=pd.to_datetime(cust_info['birthday'].astype(np.int32).astype(str),format='%Y%m%d',errors='coerce')
     cust_info.loc[cust_info['birthday_datetime']==datetime(1800,01,01),'birthday_datetime']=np.nan
     cust_info.loc[cust_info['birthday']=='18000101','birthday']=np.nan
     #Add some attributes to cust_info
@@ -102,7 +102,7 @@ def clean_data(cust_info,cust_trade):
     cust_trade=dc.to_float32_group(cust_trade,trade_to_float32_list)
     del trade_to_int32_list,trade_to_float32_list
 
-    cust_trade['bizdate_date']=pd.to_datetime(cust_trade['bizdate'].astype(str))
+    cust_trade['bizdate_date']=pd.to_datetime(cust_trade['bizdate'].astype(str),errors='coerce')
     cust_trade['order_minute']=(cust_trade['ordertime'].astype(np.int32).astype(str).str[-6:-4]).apply(lambda x: 0 if x=='' else int(x))
     cust_trade['order_hour']=(cust_trade['ordertime'].astype(np.int32).astype(str).str[:-6]).apply(lambda x: 0 if x=='' else int(x))
     cust_trade['match_minute']=(cust_trade['matchtime'].astype(np.int32).astype(str).str[-6:-4]).apply(lambda x: 0 if x=='' else int(x))
@@ -162,7 +162,8 @@ def generate_features(cust_info,cust_trade):
     trade_feats=stock_trade_group['sno'].count()
     trade_feats_unstack=trade_feats.unstack()
     trade_feats_unstack.fillna(0,inplace=True)
-    reg_x=range(1,15)
+    week_max=len(cust_trade.biz_week.unique())
+    reg_x=range(1,week_max+1)
     reg_result=trade_feats_unstack.apply(lambda y: np.polyfit(reg_x,y.values,3),axis=1)
     reg_beta_3=reg_result.apply(lambda x:x[0])
     reg_beta_2=reg_result.apply(lambda x:x[1])
@@ -177,7 +178,7 @@ def generate_features(cust_info,cust_trade):
     trade_feats=stock_trade_group['sno'].count()
     trade_feats_unstack = trade_feats.unstack()
     trade_feats_unstack.fillna(0, inplace=True)
-    reg_x = range(1, 15)
+    reg_x=range(1,week_max+1)
     reg_result = trade_feats_unstack.apply(lambda y: np.polyfit(reg_x, y.values, 3), axis=1)
     reg_beta_3 = reg_result.apply(lambda x: x[0])
     reg_beta_2 = reg_result.apply(lambda x: x[1])
@@ -192,7 +193,7 @@ def generate_features(cust_info,cust_trade):
     trade_feats=stock_trade_group['sno'].count()
     trade_feats_unstack = trade_feats.unstack()
     trade_feats_unstack.fillna(0, inplace=True)
-    reg_x = range(1, 15)
+    reg_x=range(1,week_max+1)
     reg_result = trade_feats_unstack.apply(lambda y: np.polyfit(reg_x, y.values, 3), axis=1)
     reg_beta_3 = reg_result.apply(lambda x: x[0])
     reg_beta_2 = reg_result.apply(lambda x: x[1])
@@ -207,7 +208,7 @@ def generate_features(cust_info,cust_trade):
     trade_feats=stock_trade_group['sno'].count()
     trade_feats_unstack = trade_feats.unstack()
     trade_feats_unstack.fillna(0, inplace=True)
-    reg_x = range(1, 15)
+    reg_x=range(1,week_max+1)
     reg_result = trade_feats_unstack.apply(lambda y: np.polyfit(reg_x, y.values, 3), axis=1)
     reg_beta_3 = reg_result.apply(lambda x: x[0])
     reg_beta_2 = reg_result.apply(lambda x: x[1])

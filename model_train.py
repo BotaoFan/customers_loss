@@ -45,9 +45,9 @@ def test_result(model,x,y,bins=20,paras_label=''):
     return result_df,rocau_score,correct_rate,
 
 
-def xgboost_paras_select(train_x,train_y,cv_paras,other_paras,cv=5,verbose=3):
+def xgboost_paras_select(train_x,train_y,cv_paras,other_paras,cv=5,verbose=3,n_jobs=3):
     model=xgb.XGBClassifier(**other_paras)
-    optimized_GBM=GridSearchCV(estimator=model,param_grid=cv_paras,scoring='roc_auc',cv=cv,verbose=verbose,n_jobs=4)
+    optimized_GBM=GridSearchCV(estimator=model,param_grid=cv_paras,scoring='roc_auc',cv=cv,verbose=verbose,n_jobs=n_jobs)
     optimized_GBM.fit(train_x, train_y)
     evalute_result = optimized_GBM.grid_scores_
     print('每轮迭代运行结果:{0}'.format(evalute_result))
