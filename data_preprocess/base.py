@@ -12,6 +12,3 @@ class DateTranslator(object):
         df.loc[df[col].isnull(),col]='18000101'
         df.loc[df[col].astype(np.int32).astype(str).apply(lambda x: len(x) < 8), col]='18000101'
 
-
-def show():
-    print __name__
