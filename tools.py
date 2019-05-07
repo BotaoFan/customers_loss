@@ -180,6 +180,8 @@ class DataDetect(object):
         plt.show()
 
 
+
+
 if __name__=='__main__':
     pass
 
